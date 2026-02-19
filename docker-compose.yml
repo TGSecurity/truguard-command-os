@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: truguard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: truguard
+      POSTGRES_USER: truguard
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-truguard_dev_2026}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    build: ./server
+    container_name: truguard-server
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://truguard:${DB_PASSWORD:-truguard_dev_2026}@db:5432/truguard
+      PORT: 4000
+
+  frontend:
+    build: ./frontend
+    container_name: truguard-frontend
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+
+volumes:
+  pgdata:
