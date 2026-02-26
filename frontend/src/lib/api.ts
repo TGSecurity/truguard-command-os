@@ -52,4 +52,14 @@ export const api = {
   // Sync
   triggerSync: () =>
     request<any>("/sync/trigger", { method: "POST" }),
+
+  // Tom — AI Chief of Staff
+  tomDailyBrief: () =>
+    request<any>("/tom/daily-brief", { method: "POST" }),
+  tomFollowUp: () =>
+    request<any>("/tom/follow-up", { method: "POST" }),
+  tomWbr: (body: { wage: number; billRate: number; weeklyHours?: number; contractType?: string; overtime?: boolean }) =>
+    request<any>("/tom/wbr", { method: "POST", body: JSON.stringify(body) }),
+  tomChat: (message: string) =>
+    request<any>("/tom/chat", { method: "POST", body: JSON.stringify({ message }) }),
 };

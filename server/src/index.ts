@@ -12,6 +12,7 @@ import contactsRoutes from "./routes/contacts";
 import settingsRoutes from "./routes/settings";
 import auditRoutes from "./routes/audit";
 import syncRoutes from "./routes/sync";
+import tomRoutes from "./routes/tom";
 import { startSyncScheduler } from "./services/sync";
 
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/contacts", contactsRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/sync", syncRoutes);
+app.use("/api/tom", tomRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => {
