@@ -282,6 +282,92 @@ class GHLService {
     }
   }
 
+  // ─── WRITE: Create Task in GHL (Gated) ───
+  async createTask(
+    contactId: string,
+    title: string,
+    description: string,
+    dueDate?: string
+  ): Promise<{ success: boolean; data?: any; error?: string }> {
+    const { rows } = await pool.query(
+      "SELECT value FROM app_settings WHERE key = 'kill_switch'"
+    );
+    if (rows[0]?.value === "on") {
+      return { success: false, error: "Kill switch is ON. All writes blocked." };
+    }
+
+    try {
+      // GHL requires dueDate as full ISO timestamp
+      const dueDateISO = dueDate
+        ? new Date(dueDate).toISOString()
+        : new Date(Date.now() + 86400000).toISOString(); // default: tomorrow
+
+      const payload: any = {
+        title,
+        body: description,
+        dueDate: dueDateISO,
+        completed: false,
+      };
+
+      const { data } = await this.client.post(
+        `/contacts/${contactId}/tasks`,
+        payload
+        // Note: no locationId param — GHL rejects it for this endpoint
+      );
+
+      await pool.query(
+        `INSERT INTO audit_log (action, target_type, target_id, payload, approved_by, status, ghl_response)
+         VALUES ('task_create', 'contact', $1, $2, 'ceo', 'approved', $3)`,
+        [contactId, JSON.stringify({ title, description, dueDate }), JSON.stringify(data)]
+      );
+
+      return { success: true, data };
+    } catch (err: any) {
+      await pool.query(
+        `INSERT INTO audit_log (action, target_type, target_id, payload, approved_by, status, ghl_response)
+         VALUES ('task_create', 'contact', $1, $2, 'ceo', 'error', $3)`,
+        [contactId, JSON.stringify({ title, description, dueDate }), JSON.stringify({ error: err.message })]
+      );
+      return { success: false, error: err.message };
+    }
+  }
+
+  // ─── WRITE: Add Tag in GHL (Gated) ───
+  async addTag(
+    contactId: string,
+    tagName: string
+  ): Promise<{ success: boolean; data?: any; error?: string }> {
+    const { rows } = await pool.query(
+      "SELECT value FROM app_settings WHERE key = 'kill_switch'"
+    );
+    if (rows[0]?.value === "on") {
+      return { success: false, error: "Kill switch is ON. All writes blocked." };
+    }
+
+    try {
+      const { data } = await this.client.post(
+        `/contacts/${contactId}/tags`,
+        { tags: [tagName] },
+        { params: { locationId: this.locationId } }
+      );
+
+      await pool.query(
+        `INSERT INTO audit_log (action, target_type, target_id, payload, approved_by, status, ghl_response)
+         VALUES ('tag_add', 'contact', $1, $2, 'ceo', 'approved', $3)`,
+        [contactId, JSON.stringify({ tagName }), JSON.stringify(data)]
+      );
+
+      return { success: true, data };
+    } catch (err: any) {
+      await pool.query(
+        `INSERT INTO audit_log (action, target_type, target_id, payload, approved_by, status, ghl_response)
+         VALUES ('tag_add', 'contact', $1, $2, 'ceo', 'error', $3)`,
+        [contactId, JSON.stringify({ tagName }), JSON.stringify({ error: err.message })]
+      );
+      return { success: false, error: err.message };
+    }
+  }
+
   // ─── Full sync ───
   async syncAll(): Promise<Record<string, number>> {
     console.log("[GHL Sync] Starting full sync...");

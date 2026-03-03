@@ -23,6 +23,7 @@ export const api = {
   getStuckQueue: (days?: number) =>
     request<any>(`/queues/stuck${days ? `?days=${days}` : ""}`),
   getCallbackQueue: () => request<any>("/queues/callbacks"),
+  getProposalResurrectionQueue: () => request<any>("/queues/proposal-resurrection"),
 
   // Contacts
   getContact: (id: string) => request<any>(`/contacts/${id}`),
@@ -34,6 +35,16 @@ export const api = {
     request<any>("/actions/approve-note", {
       method: "POST",
       body: JSON.stringify({ contactId, body }),
+    }),
+  approveTaskCreate: (contactId: string, title: string, description: string, dueDate?: string) =>
+    request<any>("/actions/approve-task-create", {
+      method: "POST",
+      body: JSON.stringify({ contactId, title, description, dueDate }),
+    }),
+  approveTagAdd: (contactId: string, tagName: string) =>
+    request<any>("/actions/approve-tag-add", {
+      method: "POST",
+      body: JSON.stringify({ contactId, tagName }),
     }),
 
   // Settings

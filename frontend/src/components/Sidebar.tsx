@@ -9,6 +9,7 @@ const navItems = [
   { href: "/board", label: "Board", icon: "📋" },
   { href: "/queues/stuck", label: "Stuck Stage", icon: "⚠️" },
   { href: "/queues/callbacks", label: "Callbacks Due", icon: "📞" },
+  { href: "/queues/proposal-resurrection", label: "Proposal Resurrection", icon: "🔄" },
   { href: "/contacts", label: "Contacts", icon: "👥" },
   { href: "/audit", label: "Audit Log", icon: "📜" },
   { href: "/settings", label: "Settings", icon: "⚙️" },

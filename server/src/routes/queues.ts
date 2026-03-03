@@ -54,4 +54,30 @@ router.get("/callbacks", async (_req: Request, res: Response) => {
   }
 });
 
+// GET /api/queues/proposal-resurrection — Proposals with no activity > threshold days (default 7)
+router.get("/proposal-resurrection", async (req: Request, res: Response) => {
+  try {
+    const thresholdDays = parseInt((req.query.days as string) || "7", 10);
+
+    const { rows } = await pool.query(
+      `SELECT o.id, o.name, o.stage_name, o.pipeline_name, o.status,
+              o.monetary_value, o.stage_entered_at,
+              c.id as contact_id, c.first_name, c.last_name, c.email, c.phone,
+              c.last_activity,
+              EXTRACT(DAY FROM NOW() - COALESCE(c.last_activity, o.stage_entered_at))::int as days_inactive
+       FROM opportunities o
+       LEFT JOIN contacts c ON o.contact_id = c.id
+       WHERE o.status = 'open'
+         AND LOWER(o.stage_name) LIKE '%proposal%'
+         AND COALESCE(c.last_activity, o.stage_entered_at) < NOW() - INTERVAL '1 day' * $1
+       ORDER BY c.last_activity ASC NULLS LAST`,
+      [thresholdDays]
+    );
+
+    res.json({ thresholdDays, total: rows.length, items: rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

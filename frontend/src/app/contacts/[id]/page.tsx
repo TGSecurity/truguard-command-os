@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import NoteModal from "@/components/NoteModal";
+import TaskModal from "@/components/TaskModal";
+import TagModal from "@/components/TagModal";
 
 export default function ContactDetailPage() {
   const { id } = useParams();
@@ -11,6 +13,8 @@ export default function ContactDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showNoteModal, setShowNoteModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [showTagModal, setShowTagModal] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -39,12 +43,26 @@ export default function ContactDetailPage() {
             {contact.company_name && <span>{contact.company_name}</span>}
           </div>
         </div>
-        <button
-          onClick={() => setShowNoteModal(true)}
-          className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-        >
-          Push Note to GHL
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowNoteModal(true)}
+            className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+          >
+            Push Note
+          </button>
+          <button
+            onClick={() => setShowTaskModal(true)}
+            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+          >
+            Create Task
+          </button>
+          <button
+            onClick={() => setShowTagModal(true)}
+            className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium"
+          >
+            Add Tag
+          </button>
+        </div>
       </div>
 
       {contact.tags?.length > 0 && (
@@ -127,6 +145,22 @@ export default function ContactDetailPage() {
           contactId={id as string}
           contactName={name}
           onClose={() => setShowNoteModal(false)}
+          onSuccess={load}
+        />
+      )}
+      {showTaskModal && (
+        <TaskModal
+          contactId={id as string}
+          contactName={name}
+          onClose={() => setShowTaskModal(false)}
+          onSuccess={load}
+        />
+      )}
+      {showTagModal && (
+        <TagModal
+          contactId={id as string}
+          contactName={name}
+          onClose={() => setShowTagModal(false)}
           onSuccess={load}
         />
       )}
